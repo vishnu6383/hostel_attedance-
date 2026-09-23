@@ -186,13 +186,11 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 - **Email**: `admin@hostel.com`
 - **Password**: `admin123`
 
-### 🎓 Sample Enrolled Students
-| Register Number | Student Name | Department | Block & Room |
-| :---: | :---: | :---: | :---: |
-| `23ADS001` | Aravind Kumar | Artificial Intelligence & Data Science | Block A - 101 |
-| `23ADS002` | Bhavna Sharma | Artificial Intelligence & Data Science | Block A - 102 |
-| `23CSE015` | Chaitanya Reddy | Computer Science & Engineering | Block A - 204 |
-| `23ECE042` | Deepak Verma | Electronics & Communication | Block B - 108 |
+### 🎓 Enrolled Students in Database
+| Register Number | Student Name | Department | Year / Semester | Hostel Block & Room |
+| :---: | :---: | :---: | :---: | :---: |
+| `927623BAD125` | **vishnu** | AI & Data Science | IV Year (Sem 7) | Block A — Room 101 |
+| `927623BEC010` | **Aravind** | Electronics & Comm. | IV Year (Sem 7) | Block A — Room 102 |
 
 ---
 
