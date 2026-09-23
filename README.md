@@ -34,22 +34,45 @@
 
 ## 🔄 5-Stage Verification Pipeline
 
+The attendance system enforces a zero-trust, multi-factor sequential pipeline on the backend. Every step must be cryptographically validated before a student is marked **`PRESENT`**:
+
 ```mermaid
-graph LR
-    A[🕒 Time Check] -->|In Session Window| B[📍 GPS Geofence Check]
-    B -->|Within 100m Radius| C[🆔 Register No. Check]
-    C -->|Student Active in DB| D[🤖 AI Face Match & Anti-Spoof]
-    D -->|ArcFace Cosine ≤ 0.68| E[🎭 Dynamic Liveness Challenge]
-    E -->|Gesture Verified in 30s| F[✅ Attendance Marked PRESENT]
+flowchart TD
+    subgraph S1["Stage 1: Session & Schedule Validation"]
+        A["🕒 Time Check<br/><i>Server-enforced session active window</i>"]
+    end
+    subgraph S2["Stage 2: Geolocation Perimeter"]
+        B["📍 GPS Geofence Check<br/><i>Haversine formula within 100m hostel radius</i>"]
+    end
+    subgraph S3["Stage 3: Identity & Enrollment"]
+        C["🆔 Register Number Check<br/><i>Validates student profile & hostel block in DB</i>"]
+    end
+    subgraph S4["Stage 4: AI Biometrics & Anti-Spoof"]
+        D["🤖 AI Facial Recognition<br/><i>ArcFace 512-D Cosine Match (≤ 0.68) + Screen Spoof Check</i>"]
+    end
+    subgraph S5["Stage 5: Dynamic Liveness Challenge"]
+        E["🎭 Randomized Gesture Challenge<br/><i>Head turn, blink, smile, or hand sign with 30s TTL nonce</i>"]
+    end
+
+    A -->|Session Active| B
+    B -->|Within Geofence| C
+    C -->|Student Enrolled| D
+    D -->|Face Verified| E
+    E -->|Gesture Passed| F["✅ Attendance Status: PRESENT"]
+
+    classDef pass fill:#0f5132,stroke:#20c997,stroke-width:2px,color:#fff;
+    class F pass;
 ```
 
-| Step | Stage | Mechanism & Verification Criteria |
-| :---: | :--- | :--- |
-| **1** | **Time Window Check** | Server-enforced session schedule validation ($StartTime \le CurrentTime \le EndTime$). |
-| **2** | **GPS Geofence** | Device coordinates validated against hostel GPS center via Haversine formula ($Distance \le Radius$). |
-| **3** | **Registration Check** | Validates active enrollment status in database against assigned hostel blocks. |
-| **4** | **AI Facial Identity** | Python FastAPI ArcFace + RetinaFace model matching with real-time Anti-Spoofing protection. |
-| **5** | **Randomized Liveness** | Cryptographically salted nonce challenge (head rotation, blink, smile, hand sign) with 30s TTL. |
+### 📋 Pipeline Stage Breakdown
+
+| Stage | Verification Gate | Technical Check & Success Criteria | Failure Action |
+| :---: | :--- | :--- | :--- |
+| **`01`** | **🕒 Time Check** | Validates that the request timestamp falls strictly between `startTime` and `endTime` of an active session. | Reject with `OUT_OF_SESSION_TIME` |
+| **`02`** | **📍 GPS Geofence** | Computes Haversine distance from student device coordinates to fixed hostel coordinates (`Distance ≤ 100m`). | Reject with `OUTSIDE_GEOFENCE` |
+| **`03`** | **🆔 Student Registry** | Queries MongoDB for student registration number, confirming active enrollment and room allocation. | Reject with `INVALID_STUDENT` |
+| **`04`** | **🤖 AI Face Matching** | Python FastAPI extracts 512-D ArcFace facial embeddings and computes Cosine Distance (`Distance ≤ 0.68`) with Anti-Spoof detection. | Reject with `FACE_MISMATCH` or `SPOOF_DETECTED` |
+| **`05`** | **🎭 Liveness Challenge** | Issues an ephemeral server nonce requiring a randomized physical action (e.g., *Turn Left, Blink Twice, Smile, Show 1 Finger*) completed within 30 seconds. | Reject with `LIVENESS_FAILED` or `LIVENESS_TIMEOUT` |
 
 ---
 
